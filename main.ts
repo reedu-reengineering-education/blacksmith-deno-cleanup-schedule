@@ -1,21 +1,19 @@
-import { load } from "https://deno.land/std@0.217.0/dotenv/mod.ts";
 import { Client } from "https://deno.land/x/postgres@v0.19.2/mod.ts";
 import { S3 } from "https://deno.land/x/s3@0.5.0/mod.ts";
 
-// Load the environment variables
-const env = await load();
-
 // Create a Postgres client instance.
-const databaseUrl = env["DIRECT_URL"];
+const databaseUrl = Deno.env.get("DIRECT_URL");
 const client = new Client(databaseUrl);
 
 // Create a S3 instance
 const s3 = new S3({
-  accessKeyID: env["S3_UPLOAD_KEY"],
-  secretKey: env["S3_UPLOAD_SECRET"],
-  region: env["S3_UPLOAD_REGION"],
-  endpointURL: env["S3_UPLOAD_ENDPOINT"],
+  accessKeyID: Deno.env.get("S3_UPLOAD_KEY")!,
+  secretKey: Deno.env.get("S3_UPLOAD_SECRET")!,
+  region: Deno.env.get("S3_UPLOAD_REGION")!,
+  endpointURL: Deno.env.get("S3_UPLOAD_ENDPOINT"),
 });
+
+console.log("All set up. Starting cron job.");
 
 Deno.cron("Delete temp files from S3", "30 1 * * *", async () => {
   try {
@@ -27,7 +25,7 @@ Deno.cron("Delete temp files from S3", "30 1 * * *", async () => {
 
 
     // Delete the files from S3
-    const bucket = s3.getBucket(env["S3_UPLOAD_BUCKET"]);
+    const bucket = s3.getBucket(Deno.env.get("S3_UPLOAD_BUCKET")!);
     for (const [_, filename] of filesToDelete.rows) {
       console.log(`[S3] Deleting ${filename}`);
       await bucket.deleteObject(filename);

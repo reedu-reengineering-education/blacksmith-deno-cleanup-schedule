@@ -1,8 +1,9 @@
-FROM denoland/deno
+FROM denoland/deno:1.41.0
 
 WORKDIR /app
 
-ADD . /app
+COPY main.ts /app
+COPY deno.lock /app
 
 RUN deno cache main.ts
 
